@@ -43,7 +43,7 @@ input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chips button{border:1.5px solid var(--line);background:#fff;font:600 14px inherit;font-family:inherit;padding:8px 14px;border-radius:20px;color:var(--ink)}
 .chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.actions{display:flex;gap:10px}.actions button{flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font:700 15px inherit;font-family:inherit}
+.actions{display:flex;gap:8px}.actions button{flex:1;padding:12px 4px;border-radius:12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font:700 15px inherit;font-family:inherit}
 .actions button.p{background:var(--navy);color:#fff}
 .note{color:var(--mut);font-size:12px;margin:6px 4px}
 .saved{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
@@ -60,6 +60,10 @@ input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
  <div id="aerr"></div>
  <div class="hero"><div class="k">مدة الاسترداد الإجمالي</div><div class="v" id="h1">—</div>
   <div class="sub"><div><span>العائد الإجمالي السنوي</span><b id="h2">—</b></div><div><span>صافي الدخل التشغيلي</span><b id="h3">—</b></div></div></div>
+ <div class="card"><h2>الوحدة</h2>
+  <label>اسم أو كود الوحدة <small>(اختياري)</small></label><input id="unitName" type="text" inputmode="text" dir="auto" style="direction:rtl" placeholder="مثال: SHR-012 شقة شيراتون">
+  <label>المساحة (م²)</label><input id="area" inputmode="decimal" placeholder="مثال: 120">
+ </div>
  <div class="card"><h2>الافتراضات الأساسية</h2>
   <div class="row"><div><label>العملة</label><select id="currency"></select></div>
   <div><label>زيادة الإيجار السنوية % <small>(من السنة 2)</small></label><input id="inc" inputmode="decimal" placeholder="0"></div></div>
@@ -81,8 +85,9 @@ input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
   <div><label>النقد الأولي المستثمر</label><input id="InitialCashInvested" inputmode="decimal"></div></div></div>
  </div>
  <div class="card"><h2>النتائج التفصيلية</h2><div id="res"></div></div>
+ <div class="card" id="perm" style="display:none"><h2>حسب المساحة</h2><div id="permres"></div></div>
  <p class="note">القيم الافتراضية صفر. امسح الحقل ليصبح "غير معروف". القيمة الفارغة تعني "غير معروف" ولا تُحسب صفرا. المقاييس التي ينقصها مدخل تظهر مع اسم الناقص. الحساب تقديري ولا يمثل تقييم سوق.</p>
- <div class="actions"><button id="save" class="p">حفظ التحليل</button><button id="share">مشاركة الملخص</button><button id="reset">مسح</button></div>
+ <div class="actions"><button id="save" class="p">حفظ التحليل</button><button id="share">مشاركة نص</button><button id="shareimg">مشاركة كصورة</button><button id="reset">مسح</button></div>
 </section>
 <section id="p">
  <div id="perr"></div>
