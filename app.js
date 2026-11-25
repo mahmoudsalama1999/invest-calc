@@ -127,3 +127,5 @@ function syncBar(){$('sb1').textContent=$('h1').textContent;$('sb2').textContent
 new MutationObserver(syncBar).observe($('h1').parentNode.parentNode,{childList:true,subtree:true,characterData:true});
 function barVis(){const onA=$('a').classList.contains('on');const r=hero.getBoundingClientRect();sbar.classList.toggle('on',onA&&r.bottom<($('top').offsetHeight-sbar.offsetHeight+4))}
 addEventListener('scroll',barVis,{passive:true});document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>setTimeout(barVis,50)));syncBar();
+// prefilled "0": select it on focus so typing replaces it
+document.addEventListener('focusin',e=>{const t=e.target;if(t.tagName==='INPUT'&&t.value==='0')setTimeout(()=>{try{t.select()}catch(_){}},0)});
