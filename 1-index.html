@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0F1B33">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="استثمار">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.json">
+<title>التحليل الاستثماري</title>
+<style>
+:root{--navy:#0F1B33;--navy2:#17294A;--gold:#D4AD36;--bg:#F3F5F9;--card:#fff;--ink:#14213D;--mut:#6A7488;--line:#E3E7EF;--ok:#14804A;--bad:#C0392B}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"SF Arabic","Segoe UI",Tahoma,sans-serif;font-size:16px;line-height:1.5;padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
+header{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 18px 18px}
+header h1{margin:0;font-size:20px}header p{margin:2px 0 0;color:#B9C3D9;font-size:13px}
+header h1 b{color:var(--gold)}
+nav{display:flex;gap:6px;background:var(--navy);padding:0 12px 10px;position:sticky;top:0;z-index:5}
+nav button{flex:1;border:0;background:transparent;color:#B9C3D9;font:600 14px inherit;font-family:inherit;padding:10px 4px;border-radius:10px}
+nav button.on{background:var(--gold);color:var(--navy)}
+main{padding:14px;max-width:640px;margin:auto}
+section{display:none}section.on{display:block}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,27,51,.07)}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.card h2:before{content:"";width:4px;height:16px;background:var(--gold);border-radius:2px}
+label{display:block;font-size:13px;color:var(--mut);margin:12px 0 4px;font-weight:600}
+label small{font-weight:400}
+input,select{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:#FAFBFD;color:var(--ink);direction:ltr;text-align:right}
+select{direction:rtl}
+input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hero{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
+.hero .k{color:#B9C3D9;font-size:13px}.hero .v{font-size:30px;font-weight:800;color:var(--gold);margin-top:2px}
+.hero .sub{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px;border-top:1px solid rgba(255,255,255,.15);padding-top:12px}
+.hero .sub div span{display:block;color:#B9C3D9;font-size:12px}.hero .sub div b{font-size:17px}
+.m{display:flex;justify-content:space-between;align-items:baseline;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.m:last-child{border:0}.m .n{font-size:14px}.m .val{font-weight:700;font-variant-numeric:tabular-nums;text-align:left;white-space:nowrap;direction:ltr}
+.m .na{font-weight:400;color:var(--mut);font-size:12px;text-align:left;direction:rtl;white-space:normal}
+.neg{color:var(--bad)}
+.err{background:#FDECEA;color:var(--bad);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips button{border:1.5px solid var(--line);background:#fff;font:600 14px inherit;font-family:inherit;padding:8px 14px;border-radius:20px;color:var(--ink)}
+.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
+.actions{display:flex;gap:10px}.actions button{flex:1;padding:12px;border-radius:12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font:700 15px inherit;font-family:inherit}
+.actions button.p{background:var(--navy);color:#fff}
+.note{color:var(--mut);font-size:12px;margin:6px 4px}
+.saved{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
+.saved button{border:0;background:none;color:var(--bad);font-family:inherit;font-size:13px}
+.saved a{color:var(--navy);font-weight:700;text-decoration:none}
+@media print{header,nav,.actions{display:none}}
+</style>
+</head>
+<body>
+<header><h1>التحليل <b>الاستثماري</b></h1><p>حاسبة عائد واسترداد العقار، بنفس معادلات برنامج RealEstateDesk</p></header>
+<nav><button data-t="a" class="on">التحليل</button><button data-t="p">السعر من الإيجار</button><button data-t="s">المحفوظات</button></nav>
+<main>
+<section id="a" class="on">
+ <div id="aerr"></div>
+ <div class="hero"><div class="k">مدة الاسترداد الإجمالي</div><div class="v" id="h1">—</div>
+  <div class="sub"><div><span>العائد الإجمالي السنوي</span><b id="h2">—</b></div><div><span>صافي الدخل التشغيلي</span><b id="h3">—</b></div></div></div>
+ <div class="card"><h2>الافتراضات الأساسية</h2>
+  <div class="row"><div><label>العملة</label><select id="currency"></select></div>
+  <div><label>زيادة الإيجار السنوية % <small>(من السنة 2)</small></label><input id="inc" inputmode="decimal" placeholder="0"></div></div>
+  <label>سعر الشراء</label><input id="PurchasePrice" inputmode="decimal" placeholder="مثال: 3,000,000">
+  <label>الإيجار الشهري (السنة الأولى)</label><input id="MonthlyRent" inputmode="decimal" placeholder="مثال: 20,000">
+ </div>
+ <div class="card"><h2>الدخل والمصروفات</h2>
+  <label>نسبة الشغور % <small>(0 إلى 100)</small></label><input id="VacancyRate" inputmode="decimal" value="0" placeholder="مثال: 5">
+  <label>دخل سنوي آخر</label><input id="OtherAnnualIncome" inputmode="decimal" value="0" placeholder="0">
+  <label>المصروفات التشغيلية السنوية</label><input id="AnnualOperatingExpenses" inputmode="decimal" value="0" placeholder="صيانة، ضرائب، إدارة">
+ </div>
+ <div class="card"><h2>تكاليف الشراء</h2>
+  <div class="row"><div><label>تكاليف الاستحواذ</label><input id="AcquisitionCosts" inputmode="decimal" value="0" placeholder="تسجيل، عمولة"></div>
+  <div><label>التجهيزات الأولية</label><input id="InitialImprovements" inputmode="decimal" value="0" placeholder="تشطيب، أثاث"></div></div>
+ </div>
+ <div class="card"><h2>التمويل</h2>
+  <label>حالة التمويل</label><select id="financing"><option value="">غير محدد</option><option value="none">بدون تمويل</option><option value="financed">بتمويل</option></select>
+  <div id="finBox" style="display:none"><div class="row"><div><label>خدمة الدين السنوية</label><input id="AnnualDebtService" inputmode="decimal"></div>
+  <div><label>النقد الأولي المستثمر</label><input id="InitialCashInvested" inputmode="decimal"></div></div></div>
+ </div>
+ <div class="card"><h2>النتائج التفصيلية</h2><div id="res"></div></div>
+ <p class="note">القيم الافتراضية صفر. امسح الحقل ليصبح "غير معروف". القيمة الفارغة تعني "غير معروف" ولا تُحسب صفرا. المقاييس التي ينقصها مدخل تظهر مع اسم الناقص. الحساب تقديري ولا يمثل تقييم سوق.</p>
+ <div class="actions"><button id="save" class="p">حفظ التحليل</button><button id="share">مشاركة الملخص</button><button id="reset">مسح</button></div>
+</section>
+<section id="p">
+ <div id="perr"></div>
+ <div class="hero"><div class="k">السعر التقديري للشراء</div><div class="v" id="pp">—</div><div class="sub"><div><span>إجمالي الإيجار خلال المدة</span><b id="pp2">—</b></div><div><span>المدة</span><b id="pp3">—</b></div></div></div>
+ <div class="card"><h2>المدخلات</h2>
+  <label>العملة</label><select id="pcur"></select>
+  <label>الإيجار الشهري (السنة الأولى)</label><input id="prent" inputmode="decimal" placeholder="مثال: 5,000">
+  <label>زيادة الإيجار السنوية %</label><input id="pinc" inputmode="decimal" placeholder="0">
+  <label>مدة الاسترداد (سنوات)</label>
+  <div class="chips" id="chips"><button data-y="5">5</button><button data-y="10" class="on">10</button><button data-y="15">15</button><button data-y="20">20</button></div>
+  <input id="pyears" inputmode="decimal" value="10" style="margin-top:10px" placeholder="مدة مخصصة، مثال: 7.5">
+ </div>
+ <p class="note">السعر قبل المصروفات وعلى إشغال كامل. مثال: إيجار 5,000 شهريا لمدة 10 سنوات = 600,000. الزيادة السنوية تُطبق عند كل ذكرى، والسنة الجزئية تُحسب بنسبتها.</p>
+ <div class="actions"><button id="use" class="p">استخدام في التحليل</button></div>
+</section>
+<section id="s"><div class="card"><h2>التحليلات المحفوظة على هذا الجهاز</h2><div id="list"></div></div></section>
+</main>
+<script src="calc.js"></script><script src="app.js"></script>
+</body></html>
