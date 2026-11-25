@@ -15,7 +15,7 @@ function read(){const i={currency:$('currency').value,financing:$('financing').v
  for(const k of MONEY)i[k]=parse(k);i.area=parse('area');const v=parse('VacancyRate');i.VacancyRate=v==null?null:v/100;
  if(i.VacancyRate!=null&&!Number.isNaN(i.VacancyRate))i.VacancyRate=Math.round(i.VacancyRate*1e6)/1e6;return i}
 // live thousand separators
-const SEP=['area','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent'];
+const SEP=['loanAmt','area','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent'];
 function group(s){s=s.replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[۰-۹]/g,d=>PR.indexOf(d)).replace(/[٫]/g,'.').replace(/[^0-9.]/g,'');
  const i=s.indexOf('.');let ip=i<0?s:s.slice(0,i),dp=i<0?null:s.slice(i+1).replace(/\./g,'');
  ip=ip.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');return dp===null?ip:ip+'.'+dp}
@@ -34,12 +34,25 @@ function perMeter(i,M,cur){const ar=parse('area'),box=$('perm');perm=[];
  add('صافي الدخل التشغيلي للمتر سنويا',M.NetOperatingIncome.ok?M.NetOperatingIncome.value/ar:null);
  box.style.display=perm.length?'block':'none';
  $('permres').innerHTML=perm.map(x=>`<div class="m"><span class="n">${x[0]}</span><span class="val">${x[1]}</span></div>`).join('')}
+// loan -> annual debt service (level monthly payment, monthly compounding)
+function loanService(loan,ratePct,years){const n=Math.round(years*12),r=ratePct/1200;
+ const pmt=r===0?loan/n:loan*r/(1-Math.pow(1+r,-n));return {monthly:pmt,annual:Math.round(pmt*12*100)/100}}
+function applyLoan(i){const loan=parse('loanAmt'),rate=parse('loanRate'),yrs=parse('loanYears'),ds=$('AnnualDebtService'),info=$('loanInfo');
+ info.textContent='';i.loanError=null;
+ if(i.financing!=='financed'||(loan==null&&rate==null&&yrs==null)){ if(ds.dataset.auto){ds.value='';delete ds.dataset.auto;ds.readOnly=false;i.AnnualDebtService=null}else ds.readOnly=false;return}
+ if([loan,rate,yrs].some(Number.isNaN)){i.loanError='أرقام غير صالحة في بيانات القرض.';return}
+ if(loan==null||rate==null||yrs==null){i.loanError='أدخل مبلغ القرض والفائدة ومدة القرض معا، أو امسحها.';return}
+ if(!(loan>0)||!(yrs>0)||rate<0||Math.round(yrs*12)<1){i.loanError='مبلغ القرض والمدة أكبر من صفر، والفائدة صفر أو أكثر.';return}
+ const s=loanService(loan,rate,yrs);ds.value=group(String(s.annual));ds.dataset.auto=1;ds.readOnly=true;i.AnnualDebtService=s.annual;
+ info.textContent='القسط الشهري '+fmt(s.monthly)+' | السنوي '+fmt(s.annual)+' | إجمالي الفوائد '+fmt(s.annual*yrs-loan)+' '+i.currency}
+function cashHint(i,M){const h=$('cashHint'),l=parse('loanAmt');h.textContent='';if(i.financing==='financed'&&l>0&&M.TotalInvestment.ok&&M.TotalInvestment.value>=l)h.textContent='النقد المقترح = إجمالي الاستثمار - القرض = '+fmt(M.TotalInvestment.value-l)+' '+i.currency+' (أدخله في الخانة إن كان صحيحا)'}
 let last=null;
 function render(){const i=read();$('finBox').style.display=i.financing==='financed'?'block':'none';
  if(i.financing!=='financed'){}
- const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate'].filter(k=>Number.isNaN(i[k]));
+ applyLoan(i);const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate'].filter(k=>Number.isNaN(i[k]));
  const box=$('aerr');box.innerHTML='';
  if(bad.length){box.innerHTML='<div class="err">أرقام غير صالحة في بعض الحقول. أدخل أرقاما فقط.</div>';return}
+ if(i.loanError){box.innerHTML='<div class="err">'+i.loanError+'</div>';return}
  const r=C.calculate(i);last={i,r};
  if(r.errors.length){box.innerHTML='<div class="err">'+r.errors.map(e=>e[1]).join('<br>')+'</div>';['h1','h2','h3'].forEach(x=>$(x).textContent='—');$('res').innerHTML='';return}
  const M=r.metrics,cur=i.currency;
@@ -47,7 +60,7 @@ function render(){const i=read();$('finBox').style.display=i.financing==='financ
  $('h2').textContent=show('GrossAnnualYield',M.GrossAnnualYield,cur)||'—';
  $('h3').textContent=show('NetOperatingIncome',M.NetOperatingIncome,cur)||'—';
  $('res').innerHTML=Object.keys(NAMES).map(k=>{const m=M[k],s=show(k,m,cur,1);
-  return `<div class="m"><span class="n">${NAMES[k]}</span>${s?`<span class="val ${m.value<0?'neg':''}">${s}</span>`:`<span class="na">${m.why||'غير متاح'}</span>`}</div>`}).join('');perMeter(i,M,cur)}
+  return `<div class="m"><span class="n">${NAMES[k]}</span>${s?`<span class="val ${m.value<0?'neg':''}">${s}</span>`:`<span class="na">${m.why||'غير متاح'}</span>`}</div>`}).join('');perMeter(i,M,cur);cashHint(i,M)}
 document.querySelectorAll('#a input,#a select').forEach(e=>e.addEventListener('input',render));
 // tabs
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.t).classList.add('on');if(b.dataset.t==='s')list();scrollTo(0,0)});
