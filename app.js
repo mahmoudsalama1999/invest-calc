@@ -14,6 +14,15 @@ function show(k,m,cur,full){if(!m.ok)return null;const v=m.value,t=KIND[k];
 function read(){const i={currency:$('currency').value,financing:$('financing').value,annualRentIncreasePercent:parse('inc')};
  for(const k of MONEY)i[k]=parse(k);const v=parse('VacancyRate');i.VacancyRate=v==null?null:v/100;
  if(i.VacancyRate!=null&&!Number.isNaN(i.VacancyRate))i.VacancyRate=Math.round(i.VacancyRate*1e6)/1e6;return i}
+// live thousand separators
+const SEP=['PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent'];
+function group(s){s=s.replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[۰-۹]/g,d=>PR.indexOf(d)).replace(/[٫]/g,'.').replace(/[^0-9.]/g,'');
+ const i=s.indexOf('.');let ip=i<0?s:s.slice(0,i),dp=i<0?null:s.slice(i+1).replace(/\./g,'');
+ ip=ip.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');return dp===null?ip:ip+'.'+dp}
+function liveFormat(e){const el=e.target,pos=el.selectionStart,before=el.value.slice(0,pos).replace(/[^0-9٠-٩۰-۹.٫]/g,'').length;
+ const v=group(el.value);if(v===el.value)return;el.value=v;let n=0,p=0;while(p<v.length&&n<before){if(/[0-9.]/.test(v[p]))n++;p++}try{el.setSelectionRange(p,p)}catch(_){}}
+SEP.forEach(id=>{const el=$(id);el.addEventListener('input',liveFormat);el.setAttribute('autocomplete','off')});
+const fmtAll=()=>SEP.forEach(id=>{$(id).value=group($(id).value)});
 let last=null;
 function render(){const i=read();$('finBox').style.display=i.financing==='financed'?'block':'none';
  if(i.financing!=='financed'){}
@@ -39,7 +48,7 @@ function price(){const box=$('perr');box.innerHTML='';const rent=parse('prent'),
  catch(e){box.innerHTML='<div class="err">'+e.message+'</div>';return null}}
 document.querySelectorAll('#p input,#p select').forEach(e=>e.addEventListener('input',()=>{document.querySelectorAll('#chips button').forEach(b=>b.classList.toggle('on',e.id==='pyears'&&b.dataset.y===$('pyears').value.trim()));price()}));
 document.querySelectorAll('#chips button').forEach(b=>b.onclick=()=>{$('pyears').value=b.dataset.y;document.querySelectorAll('#chips button').forEach(x=>x.classList.toggle('on',x===b));price()});
-$('use').onclick=()=>{const p=price();if(p==null)return;$('PurchasePrice').value=p;$('MonthlyRent').value=$('prent').value;$('inc').value=$('pinc').value;$('currency').value=$('pcur').value;document.querySelector('nav [data-t=a]').click();render()};
+$('use').onclick=()=>{const p=price();if(p==null)return;$('PurchasePrice').value=group(String(p));$('MonthlyRent').value=$('prent').value;$('inc').value=$('pinc').value;$('currency').value=$('pcur').value;document.querySelector('nav [data-t=a]').click();render()};
 // sync currency/rent/increase into price tab as starting point
 ['currency','MonthlyRent','inc'].forEach(id=>$(id).addEventListener('input',()=>{if(id==='currency')$('pcur').value=$(id).value;if(id==='MonthlyRent'&&!$('prent').dataset.t)$('prent').value=$(id).value;if(id==='inc'&&!$('pinc').dataset.t)$('pinc').value=$(id).value;price()}));
 ['prent','pinc'].forEach(id=>$(id).addEventListener('input',()=>$(id).dataset.t=1));
@@ -51,7 +60,7 @@ $('share').onclick=()=>{render();if(!last||last.r.errors.length)return;const t=s
 $('reset').onclick=()=>{document.querySelectorAll('#a input').forEach(e=>e.value=['VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements'].includes(e.id)?'0':'');$('financing').value='';render()};
 function list(){const a=load();$('list').innerHTML=a.length?a.map((x,k)=>`<div class="saved"><a href="#" data-o="${k}">${x.n.replace(/</g,'&lt;')}</a><span>${new Date(x.t).toLocaleDateString('ar-EG')}</span><button data-d="${k}">حذف</button></div>`).join(''):'<p class="note">لا توجد تحليلات محفوظة بعد.</p>'}
 $('list').onclick=e=>{const o=e.target.dataset.o,d=e.target.dataset.d,a=load();e.preventDefault();
- if(o!=null){for(const[id,v]of Object.entries(a[o].f))$(id).value=v;document.querySelector('nav [data-t=a]').click();render()}
+ if(o!=null){for(const[id,v]of Object.entries(a[o].f))$(id).value=v;fmtAll();document.querySelector('nav [data-t=a]').click();render()}
  if(d!=null&&confirm('حذف هذا التحليل؟')){a.splice(d,1);localStorage.setItem(KEY,JSON.stringify(a));list()}};
 render();price();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
