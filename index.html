@@ -9,27 +9,40 @@
 <meta name="apple-mobile-web-app-title" content="استثمار">
 <link rel="apple-touch-icon" href="6-icon-180.png">
 <link rel="manifest" href="manifest.json">
-<title>التحليل الاستثماري</title>
+<script>try{var t=localStorage.getItem('inv-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');document.documentElement.dataset.theme=t}catch(e){}</script><title>التحليل الاستثماري</title>
 <style>
-:root{--navy:#0F1B33;--navy2:#17294A;--gold:#D4AD36;--bg:#F3F5F9;--card:#fff;--ink:#14213D;--mut:#6A7488;--line:#E3E7EF;--ok:#14804A;--bad:#C0392B}
+:root{--navy:#0F1B33;--navy2:#17294A;--gold:#D4AD36;--bg:#F3F5F9;--card:#fff;--ink:#14213D;--mut:#6A7488;--line:#E3E7EF;--ok:#14804A;--bad:#C0392B;--inp:#FAFBFD;--btn:#fff;--btnink:#0F1B33;--errbg:#FDECEA;--h2:#0F1B33;--shadow:0 1px 3px rgba(15,27,51,.07);color-scheme:light}
+[data-theme=dark]{--bg:#0A1222;--card:#13203A;--ink:#E8EDF7;--mut:#93A0BA;--line:#25365A;--bad:#FF7A6B;--inp:#0E1A30;--btn:#13203A;--btnink:#E8EDF7;--errbg:#3A1E24;--h2:#E8EDF7;--shadow:none;color-scheme:dark}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,"SF Arabic","Segoe UI",Tahoma,sans-serif;font-size:16px;line-height:1.5;padding-bottom:calc(env(safe-area-inset-bottom) + 24px)}
 header{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;padding:calc(env(safe-area-inset-top) + 14px) 18px 18px}
 header h1{margin:0;font-size:20px}header p{margin:2px 0 0;color:#B9C3D9;font-size:13px}
 header h1 b{color:var(--gold)}
-nav{display:flex;gap:6px;background:var(--navy);padding:0 12px 10px;position:sticky;top:0;z-index:5}
+#top{position:sticky;top:0;z-index:5;background:var(--navy)}
+nav{display:flex;gap:6px;padding:0 12px 10px}
+#sbar{display:none;justify-content:space-around;gap:8px;padding:6px 12px 10px;color:#fff;border-top:1px solid rgba(255,255,255,.12)}
+#sbar.on{display:flex}
+#sbar div{text-align:center}#sbar span{display:block;color:#B9C3D9;font-size:11px}#sbar b{color:var(--gold);font-size:16px}
+.card h2{cursor:pointer;user-select:none}
+.card h2:after{content:'\25BE';margin-inline-start:auto;color:var(--mut);transition:transform .2s}
+.card.closed h2:after{transform:rotate(90deg)}
+.card.closed>*:not(h2){display:none}
+.card.closed h2{margin-bottom:0}
+#theme{position:absolute;top:calc(env(safe-area-inset-top) + 12px);left:14px;border:0;background:rgba(255,255,255,.12);color:#fff;font-size:18px;border-radius:50%;width:38px;height:38px}
+header{position:relative}
 nav button{flex:1;border:0;background:transparent;color:#B9C3D9;font:600 14px inherit;font-family:inherit;padding:10px 4px;border-radius:10px}
 nav button.on{background:var(--gold);color:var(--navy)}
 main{padding:14px;max-width:640px;margin:auto}
 section{display:none}section.on{display:block}
-.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:0 1px 3px rgba(15,27,51,.07)}
-.card h2{margin:0 0 12px;font-size:15px;color:var(--navy);display:flex;align-items:center;gap:8px}
+.card{background:var(--card);border-radius:16px;padding:16px;margin-bottom:14px;box-shadow:var(--shadow)}
+.card h2{margin:0 0 12px;font-size:15px;color:var(--h2);display:flex;align-items:center;gap:8px}
 .card h2:before{content:"";width:4px;height:16px;background:var(--gold);border-radius:2px}
 label{display:block;font-size:13px;color:var(--mut);margin:12px 0 4px;font-weight:600}
 label small{font-weight:400}
-input,select{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:#FAFBFD;color:var(--ink);direction:ltr;text-align:right}
+input,select{width:100%;font:inherit;font-size:17px;padding:11px 12px;border:1.5px solid var(--line);border-radius:11px;background:var(--inp);color:var(--ink);direction:ltr;text-align:right}
 select{direction:rtl}
-input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
+input:focus,select:focus{outline:0;border-color:var(--gold)}
+input[readonly]{opacity:.75}
 .row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .hero{background:linear-gradient(160deg,var(--navy),var(--navy2));color:#fff;border-radius:16px;padding:18px;margin-bottom:14px}
 .hero .k{color:#B9C3D9;font-size:13px}.hero .v{font-size:30px;font-weight:800;color:var(--gold);margin-top:2px}
@@ -39,26 +52,26 @@ input:focus,select:focus{outline:0;border-color:var(--gold);background:#fff}
 .m:last-child{border:0}.m .n{font-size:14px}.m .val{font-weight:700;font-variant-numeric:tabular-nums;text-align:left;white-space:nowrap;direction:ltr}
 .m .na{font-weight:400;color:var(--mut);font-size:12px;text-align:left;direction:rtl;white-space:normal}
 .neg{color:var(--bad)}
-.err{background:#FDECEA;color:var(--bad);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
+.err{background:var(--errbg);color:var(--bad);border-radius:12px;padding:12px 14px;margin-bottom:14px;font-size:14px}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chips button{border:1.5px solid var(--line);background:#fff;font:600 14px inherit;font-family:inherit;padding:8px 14px;border-radius:20px;color:var(--ink)}
-.chips button.on{background:var(--navy);color:#fff;border-color:var(--navy)}
-.actions{display:flex;gap:8px}.actions button{flex:1;padding:12px 4px;border-radius:12px;border:1.5px solid var(--navy);background:#fff;color:var(--navy);font:700 15px inherit;font-family:inherit}
-.actions button.p{background:var(--navy);color:#fff}
+.chips button{border:1.5px solid var(--line);background:var(--btn);font:600 14px inherit;font-family:inherit;padding:8px 14px;border-radius:20px;color:var(--ink)}
+.chips button.on{background:var(--gold);color:#0F1B33;border-color:var(--gold)}
+.actions{display:flex;gap:8px}.actions button{flex:1;padding:12px 4px;border-radius:12px;border:1.5px solid var(--btnink);background:var(--btn);color:var(--btnink);font:700 15px inherit;font-family:inherit}
+.actions button.p{background:var(--gold);color:#0F1B33;border-color:var(--gold)}
 .note{color:var(--mut);font-size:12px;margin:6px 4px}
 .saved{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--line);font-size:14px}
 .saved button{border:0;background:none;color:var(--bad);font-family:inherit;font-size:13px}
-.saved a{color:var(--navy);font-weight:700;text-decoration:none}
+.saved a{color:var(--ink);font-weight:700;text-decoration:none}
 @media print{header,nav,.actions{display:none}}
 </style>
 </head>
 <body>
-<header><h1>التحليل <b>الاستثماري</b></h1><p>حاسبة عائد واسترداد العقار، بنفس معادلات برنامج RealEstateDesk</p></header>
-<nav><button data-t="a" class="on">التحليل</button><button data-t="p">السعر من الإيجار</button><button data-t="s">المحفوظات</button></nav>
+<header><button id="theme" aria-label="الوضع الليلي">🌙</button><h1>التحليل <b>الاستثماري</b></h1><p>حاسبة عائد واسترداد العقار، بنفس معادلات برنامج RealEstateDesk</p></header>
+<div id="top"><nav><button data-t="a" class="on">التحليل</button><button data-t="p">السعر من الإيجار</button><button data-t="s">المحفوظات</button></nav><div id="sbar"><div><span>مدة الاسترداد</span><b id="sb1">—</b></div><div><span>العائد السنوي</span><b id="sb2">—</b></div><div><span>صافي الدخل</span><b id="sb3">—</b></div></div></div>
 <main>
 <section id="a" class="on">
  <div id="aerr"></div>
- <div class="hero"><div class="k">مدة الاسترداد الإجمالي</div><div class="v" id="h1">—</div>
+ <div class="hero" id="hero"><div class="k">مدة الاسترداد الإجمالي</div><div class="v" id="h1">—</div>
   <div class="sub"><div><span>العائد الإجمالي السنوي</span><b id="h2">—</b></div><div><span>صافي الدخل التشغيلي</span><b id="h3">—</b></div></div></div>
  <div class="card"><h2>الوحدة</h2>
   <label>اسم أو كود الوحدة <small>(اختياري)</small></label><input id="unitName" type="text" inputmode="text" dir="auto" style="direction:rtl" placeholder="مثال: SHR-012 شقة شيراتون">
