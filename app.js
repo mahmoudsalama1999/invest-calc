@@ -110,3 +110,20 @@ $('shareimg').onclick=async()=>{render();if(!last||last.r.errors.length){alert('
  const cv=drawCard();cv.toBlob(async b=>{const f=new File([b],'investment-analysis.png',{type:'image/png'});
   if(navigator.canShare&&navigator.canShare({files:[f]})){try{await navigator.share({files:[f]})}catch(_){}}
   else{const u=URL.createObjectURL(b);const a=document.createElement('a');a.href=u;a.download='investment-analysis.png';document.body.appendChild(a);a.click();a.remove()}},'image/png')};
+
+// theme
+function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem('inv-theme',t)}catch(_){}$('theme').textContent=t==='dark'?'☀️':'🌙';document.querySelector('meta[name=theme-color]').content=t==='dark'?'#0A1222':'#0F1B33'}
+$('theme').onclick=()=>setTheme(document.documentElement.dataset.theme==='dark'?'light':'dark');
+setTheme(document.documentElement.dataset.theme||'light');
+// collapsible cards (state remembered)
+const CK='inv-closed';let closed=[];try{closed=JSON.parse(localStorage.getItem(CK)||'[]')}catch(_){}
+document.querySelectorAll('.card').forEach((c,n)=>{const h=c.querySelector('h2');if(!h)return;const key=h.textContent.trim();h.setAttribute('role','button');h.tabIndex=0;
+ if(closed.includes(key))c.classList.add('closed');
+ const tg=()=>{c.classList.toggle('closed');const s=c.classList.contains('closed');closed=closed.filter(x=>x!==key);if(s)closed.push(key);try{localStorage.setItem(CK,JSON.stringify(closed))}catch(_){}};
+ h.onclick=tg;h.onkeydown=e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();tg()}}});
+// sticky key results
+const hero=$('hero'),sbar=$('sbar');
+function syncBar(){$('sb1').textContent=$('h1').textContent;$('sb2').textContent=$('h2').textContent;$('sb3').textContent=$('h3').textContent}
+new MutationObserver(syncBar).observe($('h1').parentNode.parentNode,{childList:true,subtree:true,characterData:true});
+function barVis(){const onA=$('a').classList.contains('on');const r=hero.getBoundingClientRect();sbar.classList.toggle('on',onA&&r.bottom<($('top').offsetHeight-sbar.offsetHeight+4))}
+addEventListener('scroll',barVis,{passive:true});document.querySelectorAll('nav button').forEach(b=>b.addEventListener('click',()=>setTimeout(barVis,50)));syncBar();
