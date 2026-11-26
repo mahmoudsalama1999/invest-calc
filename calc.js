@@ -146,7 +146,7 @@
       resalePrice: i.ResalePrice, appreciation: i.appreciationPct, sellCost: i.sellingCostPct });
     const dm = (k, val, why) => { const missing = ndeps.filter(n => i[n] == null).map(n => F[n] || ({discountRate:'معدل الخصم',holdYears:'مدة الاحتفاظ'})[n]);
       M[k] = { value: val, ok: val != null, why: val != null ? '' : missing.length ? 'ينقص: ' + missing.join('، ') : (why || 'مدة الاحتفاظ يجب أن تكون أكبر من صفر') }; };
-    dm('NPV', D && D.npv); dm('PVIncome', D && D.pvIncome); dm('PVResale', D && D.pvResale); dm('IRR', D && D.irr, 'لا يوجد معدل عائد داخلي (التدفقات لا تغطي الاستثمار)');
+    dm('ResaleValue', D && D.resaleGross); dm('NPV', D && D.npv); dm('PVIncome', D && D.pvIncome); dm('PVResale', D && D.pvResale); dm('IRR', D && D.irr, 'لا يوجد معدل عائد داخلي (التدفقات لا تغطي الاستثمار)');
     const dmode = i.discountMode === 'annual' ? 'annual' : 'monthly';
     const inc2 = 1 + inc / 100;
     const dp = (k, val, deps, why) => { const miss = deps.filter(n => i[n] == null).map(n => F[n] || 'معدل الخصم');
