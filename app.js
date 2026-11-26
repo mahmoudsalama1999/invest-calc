@@ -1,19 +1,27 @@
 const $=id=>document.getElementById(id),C=InvCalc;
 const NAMES={GrossAnnualIncome:'الدخل الإجمالي السنوي',GrossMonthlyYield:'العائد الإجمالي الشهري',GrossAnnualYield:'العائد الإجمالي السنوي',EffectiveAnnualIncome:'الدخل الفعلي السنوي (بعد الشغور)',NetOperatingIncome:'صافي الدخل التشغيلي',TotalInvestment:'إجمالي الاستثمار',OperatingYieldOnPrice:'العائد التشغيلي على السعر',NetYieldOnTotalInvestment:'صافي العائد على إجمالي الاستثمار',GrossPaybackYears:'مدة الاسترداد الإجمالي',GrossPaybackYearsOnPrice:'مدة الاسترداد على السعر فقط',OperatingPaybackYears:'مدة الاسترداد التشغيلي',AnnualCashFlow:'التدفق النقدي السنوي',AverageMonthlyCashFlow:'متوسط التدفق النقدي الشهري',CashOnCashReturn:'العائد النقدي على النقد المستثمر',NPV:'صافي القيمة الحالية (NPV)',PVIncome:'القيمة الحالية للدخل التشغيلي',PVResale:'القيمة الحالية لصافي إعادة البيع',IRR:'معدل العائد الداخلي (IRR)',ResaleValue:'قيمة العقار المتوقعة عند البيع (بعد النمو)',DiscPaybackGross:'مدة الاسترداد المخصومة (من الإيجار)',DiscPaybackNet:'مدة الاسترداد المخصومة (من صافي الدخل)'};
-const KIND={GrossMonthlyYield:'pct',GrossAnnualYield:'pct',OperatingYieldOnPrice:'pct',NetYieldOnTotalInvestment:'pct',CashOnCashReturn:'pct',IRR:'pct',DiscPaybackGross:'yr',DiscPaybackNet:'yr',GrossPaybackYears:'yr',GrossPaybackYearsOnPrice:'yr',OperatingPaybackYears:'yr'};
+const ADV={RealIRR:'العائد الحقيقي بعد التضخم (Real IRR)',IRRInInvestorCcy:'العائد بعملة المستثمر (بعد انخفاض الجنيه)',IRRSpreadVsRiskFree:'الفرق عن عائد الإيداع الخالي من المخاطر',ImpliedExitCap:'معدل الرسملة الضمني عند البيع',BreakEvenOccupancy:'نسبة الإشغال للتعادل',LevNPV:'NPV على النقد المستثمر (بتمويل)',LevIRR:'IRR على النقد المستثمر (بتمويل)',EquityMultiple:'مضاعف رأس المال المستثمر',LeverageEffect:'أثر الرافعة المالية على العائد',DSCR:'معامل تغطية الدين DSCR (السنة 1)',LoanBalanceAtExit:'رصيد القرض عند البيع'};
+const KIND={RealIRR:'pct',IRRInInvestorCcy:'pct',IRRSpreadVsRiskFree:'pp',ImpliedExitCap:'pct',BreakEvenOccupancy:'pct',LeverageEffect:'pp',EquityMultiple:'x',DSCR:'x',GrossMonthlyYield:'pct',GrossAnnualYield:'pct',OperatingYieldOnPrice:'pct',NetYieldOnTotalInvestment:'pct',CashOnCashReturn:'pct',IRR:'pct',DiscPaybackGross:'yr',DiscPaybackNet:'yr',GrossPaybackYears:'yr',GrossPaybackYearsOnPrice:'yr',OperatingPaybackYears:'yr'};
 const MONEY=['ResalePrice','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested'];
 C.CURRENCIES.forEach(c=>{for(const id of['currency','pcur']){const o=document.createElement('option');o.value=o.textContent=c;$(id).appendChild(o)}});
 const AR='٠١٢٣٤٥٦٧٨٩',PR='۰۱۲۳۴۵۶۷۸۹';
-function parse(id){let s=$(id).value.trim();if(!s)return null;
+function parseS(s){s=String(s==null?'':s).trim();if(!s)return null;
  s=s.replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[۰-۹]/g,d=>PR.indexOf(d)).replace(/[,٬\s]/g,'').replace(/[٫]/g,'.');
  const n=Number(s);return Number.isFinite(n)?n:NaN}
+function parse(id){return parseS($(id).value)}
 const fmt=(n,d=2)=>new Intl.NumberFormat('en-US',{maximumFractionDigits:d,minimumFractionDigits:0}).format(n);
 function show(k,m,cur,full){if(!m.ok)return null;const v=m.value,t=KIND[k];
- if(t==='pct')return fmt(v,2)+'%';if(t==='yr'){const y=Math.floor(v),mo=Math.round((v-y)*12);return fmt(v,2)+' سنة'+(mo&&full?` (${y} سنة و${mo} شهر)`:'')}
+ if(t==='pct')return fmt(v,2)+'%';if(t==='pp')return (v>0?'+':'')+fmt(v,2)+' نقطة مئوية';if(t==='x')return fmt(v,2)+'x';if(t==='yr'){const y=Math.floor(v),mo=Math.round((v-y)*12);return fmt(v,2)+' سنة'+(mo&&full?` (${y} سنة و${mo} شهر)`:'')}
  return fmt(v)+' '+cur}
-function read(){const i={currency:$('currency').value,financing:$('financing').value,annualRentIncreasePercent:parse('inc')};
- for(const k of MONEY)i[k]=parse(k);i.area=parse('area');i.discountRate=parse('discountRate');i.discountMode=$('discountMode').value;if($('rentMode').value==='annual'&&i.MonthlyRent!=null&&!Number.isNaN(i.MonthlyRent)){i.rentAnnual=i.MonthlyRent;i.MonthlyRent=i.MonthlyRent/12}else i.rentAnnual=null;i.holdYears=parse('holdYears');i.appreciationPct=parse('appreciationPct');i.sellingCostPct=parse('sellingCostPct');const v=parse('VacancyRate');i.VacancyRate=v==null?null:v/100;
+function readG(g){const p=id=>parseS(g(id));const i={currency:g('currency')||'EGP',financing:g('financing')||'',annualRentIncreasePercent:p('inc')};
+ for(const k of MONEY)i[k]=p(k);i.area=p('area');i.discountRate=p('discountRate');i.discountMode=g('discountMode')||'monthly';
+ if((g('rentMode')||'monthly')==='annual'&&i.MonthlyRent!=null&&!Number.isNaN(i.MonthlyRent)){i.rentAnnual=i.MonthlyRent;i.MonthlyRent=i.MonthlyRent/12}else i.rentAnnual=null;
+ i.holdYears=p('holdYears');i.appreciationPct=p('appreciationPct');i.sellingCostPct=p('sellingCostPct');
+ i.inflationPct=p('inflationPct');i.riskFreePct=p('riskFreePct');i.expenseGrowthPct=p('expenseGrowthPct');i.rentTaxPct=p('rentTaxPct');i.fxDepPct=p('fxDepPct');
+ i.loanAmount=p('loanAmt');i.loanRatePct=p('loanRate');i.loanYears=p('loanYears');
+ const v=p('VacancyRate');i.VacancyRate=v==null?null:v/100;
  if(i.VacancyRate!=null&&!Number.isNaN(i.VacancyRate))i.VacancyRate=Math.round(i.VacancyRate*1e6)/1e6;return i}
+const read=()=>readG(id=>$(id).value);
 // live thousand separators
 const SEP=['loanAmt','area','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent','ResalePrice'];
 function group(s){s=s.replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[۰-۹]/g,d=>PR.indexOf(d)).replace(/[٫]/g,'.').replace(/[^0-9.]/g,'');
@@ -47,9 +55,27 @@ function applyLoan(i){const loan=parse('loanAmt'),rate=parse('loanRate'),yrs=par
  info.textContent='القسط الشهري '+fmt(s.monthly)+' | السنوي '+fmt(s.annual)+' | إجمالي الفوائد '+fmt(s.annual*yrs-loan)+' '+i.currency}
 function cashHint(i,M){const h=$('cashHint'),l=parse('loanAmt');h.textContent='';if(i.financing==='financed'&&l>0&&M.TotalInvestment.ok&&M.TotalInvestment.value>=l)h.textContent='النقد المقترح = إجمالي الاستثمار - القرض = '+fmt(M.TotalInvestment.value-l)+' '+i.currency+' (أدخله في الخانة إن كان صحيحا)'}
 let last=null;
+function renderAdv(i,r,cur){const M=r.metrics;
+ $('adv').innerHTML=Object.keys(ADV).map(k=>{const m=M[k],s=show(k,m,cur,0);return `<div class="m"><span class="n">${ADV[k]}</span>${s?`<span class="val ${m.value<0&&KIND[k]!=='x'?'neg':''}">${s}</span>`:`<span class="na">${m.why||'غير متاح'}</span>`}</div>`}).join('');
+ const w=r.warnings||[];$('warn').innerHTML=w.length?'<div class="warnbox"><b>تنبيهات التحليل</b><ul>'+w.map(x=>'<li>'+x+'</li>').join('')+'</ul></div>':'';
+ renderSens(i,r,cur)}
+// sensitivity: NPV and discounted payback across discount rates; NPV grid vs property growth
+function renderSens(i,r,cur){const box=$('sens'),M=r.metrics;
+ if(!M.NPV.ok||i.discountRate==null){box.innerHTML='<p class="note">أدخل معدل الخصم ومدة الاحتفاظ وبيانات الإيجار لعرض الحساسية.</p>';return}
+ const rates=[-6,-3,0,3,6].map(d=>Math.max(0,i.discountRate+d)).filter((x,k,ar)=>ar.indexOf(x)===k);
+ const calc=(o)=>C.calculate(Object.assign({},i,o)).metrics;
+ const rows=rates.map(x=>({x,m:calc({discountRate:x})}));
+ const th=rows.map(o=>`<th${o.x===i.discountRate?' class="cur"':''}>${fmt(o.x,1)}%</th>`).join('');
+ const tr=(n,f)=>`<tr><td class="rl">${n}</td>${rows.map(o=>`<td${o.x===i.discountRate?' class="cur"':''}>${f(o.m)}</td>`).join('')}</tr>`;
+ const npv=m=>m.NPV.ok?fmt(m.NPV.value,0):'—',pb=m=>m.DiscPaybackGross.ok?fmt(m.DiscPaybackGross.value,1)+' سنة':'لا يسترد';
+ let h=`<div class="tw"><table><tr><th>معدل الخصم</th>${th}</tr>${tr('NPV ('+cur+')',npv)}${tr('الاسترداد المخصوم من الإيجار',pb)}</table></div>`;
+ if(i.ResalePrice==null&&i.appreciationPct!=null){
+  const gs=[-6,-3,0,3,6].map(d=>Math.max(0,i.appreciationPct+d)).filter((x,k,ar)=>ar.indexOf(x)===k);
+  h+=`<p class="note" style="margin-top:12px">صافي القيمة الحالية حسب نمو سعر العقار (صفوف) ومعدل الخصم (أعمدة):</p><div class="tw"><table><tr><th>نمو السعر</th>${th}</tr>${gs.map(g=>`<tr><td class="rl${g===i.appreciationPct?' cur':''}">${fmt(g,1)}%</td>${rows.map(o=>{const m=calc({discountRate:o.x,appreciationPct:g});const v=m.NPV.ok?m.NPV.value:null;return `<td class="${v!=null&&v<0?'neg':''}${g===i.appreciationPct&&o.x===i.discountRate?' cur':''}">${v!=null?fmt(v,0):'—'}</td>`}).join('')}</tr>`).join('')}</table></div>`}
+ box.innerHTML=h}
 function render(){const i=read();$('finBox').style.display=i.financing==='financed'?'block':'none';
  if(i.financing!=='financed'){}
- applyLoan(i);const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate','discountRate','holdYears','appreciationPct','sellingCostPct'].filter(k=>Number.isNaN(i[k]));
+ applyLoan(i);const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate','discountRate','holdYears','appreciationPct','sellingCostPct','inflationPct','riskFreePct','expenseGrowthPct','rentTaxPct','fxDepPct','loanAmount','loanRatePct','loanYears'].filter(k=>Number.isNaN(i[k]));
  const box=$('aerr');box.innerHTML='';
  if(bad.length){box.innerHTML='<div class="err">أرقام غير صالحة في بعض الحقول. أدخل أرقاما فقط.</div>';return}
  if(i.loanError){box.innerHTML='<div class="err">'+i.loanError+'</div>';return}
@@ -60,7 +86,7 @@ function render(){const i=read();$('finBox').style.display=i.financing==='financ
  $('h2').textContent=show('GrossAnnualYield',M.GrossAnnualYield,cur)||'—';
  $('h3').textContent=show('NetOperatingIncome',M.NetOperatingIncome,cur)||'—';
  $('res').innerHTML=Object.keys(NAMES).map(k=>{const m=M[k],s=show(k,m,cur,1);
-  return `<div class="m"><span class="n">${NAMES[k]}</span>${s?`<span class="val ${m.value<0?'neg':''}">${s}</span>`:`<span class="na">${m.why||'غير متاح'}</span>`}</div>`}).join('');perMeter(i,M,cur);cashHint(i,M)}
+  return `<div class="m"><span class="n">${NAMES[k]}</span>${s?`<span class="val ${m.value<0?'neg':''}">${s}</span>`:`<span class="na">${m.why||'غير متاح'}</span>`}</div>`}).join('');perMeter(i,M,cur);cashHint(i,M);renderAdv(i,r,cur)}
 document.querySelectorAll('#a input,#a select').forEach(e=>e.addEventListener('input',render));
 // tabs
 document.querySelectorAll('nav button').forEach(b=>b.onclick=()=>{document.querySelectorAll('nav button,section').forEach(x=>x.classList.remove('on'));b.classList.add('on');$(b.dataset.t).classList.add('on');if(b.dataset.t==='s')list();scrollTo(0,0)});
@@ -78,13 +104,21 @@ $('use').onclick=()=>{const p=price();if(p==null)return;$('PurchasePrice').value
 ['prent','pinc'].forEach(id=>$(id).addEventListener('input',()=>$(id).dataset.t=1));
 // storage
 const KEY='inv-saved';const load=()=>JSON.parse(localStorage.getItem(KEY)||'[]');
-function summary(){const i=last.i,M=last.r.metrics,cur=i.currency;const u=$('unitName').value.trim(),ar=parse('area');return 'التحليل الاستثماري'+(u?' - '+u:'')+(ar>0?'\nالمساحة: '+fmt(ar)+' م²':'')+'\n'+Object.keys(NAMES).map(k=>NAMES[k]+': '+(show(k,M[k],cur)||'غير متاح')).join('\n')+(perm.length?'\n'+perm.map(x=>x[0]+': '+x[1]).join('\n'):'')}
+function summary(){const i=last.i,M=last.r.metrics,cur=i.currency;const u=$('unitName').value.trim(),ar=parse('area');return 'التحليل الاستثماري'+(u?' - '+u:'')+(ar>0?'\nالمساحة: '+fmt(ar)+' م²':'')+'\n'+Object.keys(NAMES).map(k=>NAMES[k]+': '+(show(k,M[k],cur)||'غير متاح')).join('\n')+'\n'+Object.keys(ADV).filter(k=>M[k].ok).map(k=>ADV[k]+': '+show(k,M[k],cur)).join('\n')+(last.r.warnings&&last.r.warnings.length?'\nتنبيهات: '+last.r.warnings.join(' | '):'')+(perm.length?'\n'+perm.map(x=>x[0]+': '+x[1]).join('\n'):'')}
 $('save').onclick=()=>{render();if(!last||last.r.errors.length)return;let n=$('unitName').value.trim();if(!n){n=prompt('اسم التحليل (مثال: شقة شيراتون 12)');if(!n)return}const a=load();a.unshift({n,t:Date.now(),f:Object.fromEntries([...document.querySelectorAll('#a input,#a select')].map(e=>[e.id,e.value]))});localStorage.setItem(KEY,JSON.stringify(a));alert('تم الحفظ على هذا الجهاز')};
 $('share').onclick=()=>{render();if(!last||last.r.errors.length)return;const t=summary();navigator.share?navigator.share({text:t}).catch(()=>{}):navigator.clipboard.writeText(t).then(()=>alert('تم نسخ الملخص'))};
-$('reset').onclick=()=>{document.querySelectorAll('#a input').forEach(e=>e.value=['VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements'].includes(e.id)?'0':e.id==='appreciationPct'?'10':'');$('financing').value='';render()};
-function list(){const a=load();$('list').innerHTML=a.length?a.map((x,k)=>`<div class="saved"><a href="#" data-o="${k}">${x.n.replace(/</g,'&lt;')}</a><span>${new Date(x.t).toLocaleDateString('ar-EG')}</span><button data-d="${k}">حذف</button></div>`).join(''):'<p class="note">لا توجد تحليلات محفوظة بعد.</p>'}
-$('list').onclick=e=>{const o=e.target.dataset.o,d=e.target.dataset.d,a=load();e.preventDefault();
- if(o!=null){['discountRate','holdYears','ResalePrice','appreciationPct','sellingCostPct'].forEach(id=>$(id).value='');$('rentMode').value='monthly';$('discountMode').value='monthly';for(const[id,v]of Object.entries(a[o].f))$(id).value=v;fmtAll();document.querySelector('nav [data-t=a]').click();render()}
+$('reset').onclick=()=>{document.querySelectorAll('#a input').forEach(e=>e.value=['VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements'].includes(e.id)?'0':e.id==='appreciationPct'?'10':e.id==='inflationPct'?'12.7':e.id==='riskFreePct'?'20':'');$('financing').value='';render()};
+function list(){const a=load();$('cmp').innerHTML='';$('list').innerHTML=a.length?a.map((x,k)=>`<div class="saved"><input type="checkbox" class="cmpck" data-c="${k}" style="width:auto"><a href="#" data-o="${k}">${x.n.replace(/</g,'&lt;')}</a><span>${new Date(x.t).toLocaleDateString('ar-EG')}</span><button data-d="${k}">حذف</button></div>`).join(''):'<p class="note">لا توجد تحليلات محفوظة بعد.</p>'}
+$('compare').onclick=()=>{const a=load(),ks=[...document.querySelectorAll('.cmpck:checked')].map(x=>+x.dataset.c);
+ if(ks.length<2){$('cmp').innerHTML='<p class="note">اختر تحليلين أو أكثر بالعلامة أولا.</p>';return}
+ const res=ks.slice(0,4).map(k=>{const f=a[k].f,i=readG(id=>f[id]!==undefined?f[id]:'');const loan=i.loanAmount,rt=i.loanRatePct,y=i.loanYears;
+  if(i.financing==='financed'&&loan>0&&rt!=null&&y>0&&!Number.isNaN(loan+rt+y))i.AnnualDebtService=loanService(loan,rt,y).annual;
+  const r=C.calculate(i);return {n:a[k].n,i,r}});
+ const keys=['TotalInvestment','GrossAnnualYield','NetOperatingIncome','OperatingYieldOnPrice','GrossPaybackYears','DiscPaybackGross','DiscPaybackNet','NPV','IRR','RealIRR','LevIRR','DSCR'];
+ const lab=k=>NAMES[k]||ADV[k];
+ $('cmp').innerHTML='<div class="tw"><table><tr><th></th>'+res.map(x=>'<th>'+x.n.replace(/</g,'&lt;')+'</th>').join('')+'</tr>'+keys.map(k=>'<tr><td class="rl">'+lab(k)+'</td>'+res.map(x=>{if(x.r.errors.length)return '<td>خطأ</td>';const s=show(k,x.r.metrics[k],x.i.currency,0);return '<td>'+(s||'—')+'</td>'}).join('')+'</tr>').join('')+'</table></div><p class="note">العملات مختلفة بين التحليلات تُعرض كما هي بدون تحويل.</p>'};
+$('list').onclick=e=>{if(e.target.classList.contains('cmpck'))return;const o=e.target.dataset.o,d=e.target.dataset.d,a=load();e.preventDefault();
+ if(o!=null){['discountRate','holdYears','ResalePrice','appreciationPct','sellingCostPct','inflationPct','riskFreePct','expenseGrowthPct','rentTaxPct','fxDepPct'].forEach(id=>$(id).value='');$('rentMode').value='monthly';$('discountMode').value='monthly';for(const[id,v]of Object.entries(a[o].f))$(id).value=v;fmtAll();document.querySelector('nav [data-t=a]').click();render()}
  if(d!=null&&confirm('حذف هذا التحليل؟')){a.splice(d,1);localStorage.setItem(KEY,JSON.stringify(a));list()}};
 render();price();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
