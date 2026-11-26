@@ -81,7 +81,8 @@ input[readonly]{opacity:.75}
   <div class="row"><div><label>العملة</label><select id="currency"></select></div>
   <div><label>زيادة الإيجار السنوية % <small>(من السنة 2)</small></label><input id="inc" inputmode="decimal" placeholder="0"></div></div>
   <label>سعر الشراء</label><input id="PurchasePrice" inputmode="decimal" placeholder="مثال: 3,000,000">
-  <label>الإيجار الشهري (السنة الأولى)</label><input id="MonthlyRent" inputmode="decimal" placeholder="مثال: 20,000">
+  <div class="row"><div><label id="rentLbl">الإيجار (السنة الأولى)</label><input id="MonthlyRent" inputmode="decimal" placeholder="مثال: 20,000"></div>
+  <div><label>الإيجار المُدخل</label><select id="rentMode"><option value="monthly">شهري</option><option value="annual">سنوي (إجمالي السنة)</option></select></div></div>
  </div>
  <div class="card"><h2>الدخل والمصروفات</h2>
   <label>نسبة الشغور % <small>(0 إلى 100)</small></label><input id="VacancyRate" inputmode="decimal" value="0" placeholder="مثال: 5">
@@ -95,6 +96,7 @@ input[readonly]{opacity:.75}
  <div class="card"><h2>معدل الخصم وإعادة البيع (صافي القيمة الحالية)</h2>
   <div class="row"><div><label>معدل الخصم السنوي %</label><input id="discountRate" inputmode="decimal" placeholder="مثال: 15"></div>
   <div><label>مدة الاحتفاظ (سنوات)</label><input id="holdYears" inputmode="decimal" placeholder="مثال: 10"></div></div>
+  <label>الخصم على الإيجار <small>(لحساب مدة الاسترداد المخصومة)</small></label><select id="discountMode"><option value="monthly">شهريا (كل شهر يتخصم بتاريخه)</option><option value="annual">سنويا (آخر كل سنة)</option></select>
   <label>قيمة إعادة البيع المتوقعة <small>(اختياري، تُحسب في نهاية المدة)</small></label><input id="ResalePrice" inputmode="decimal" placeholder="أو اتركها فاضية واكتب نمو السعر تحت">
   <div class="row"><div><label>نمو سعر العقار السنوي % <small>(لو مفيش سعر بيع)</small></label><input id="appreciationPct" inputmode="decimal" placeholder="مثال: 8"></div>
   <div><label>مصاريف البيع % <small>(سمسرة، ضرائب)</small></label><input id="sellingCostPct" inputmode="decimal" placeholder="مثال: 2.5"></div></div>
@@ -132,5 +134,5 @@ input[readonly]{opacity:.75}
 </section>
 <section id="s"><div class="card"><h2>التحليلات المحفوظة على هذا الجهاز</h2><div id="list"></div></div></section>
 </main>
-<script src="calc.js?v=3"></script><script src="app.js?v=3"></script>
+<script src="calc.js?v=4"></script><script src="app.js?v=4"></script>
 </body></html>
