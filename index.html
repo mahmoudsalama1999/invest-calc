@@ -79,8 +79,9 @@ input[readonly]{opacity:.75}
 <main>
 <section id="a" class="on">
  <div id="aerr"></div>
- <div class="hero" id="hero"><div class="k">مدة الاسترداد الإجمالي</div><div class="v" id="h1">—</div>
-  <div class="sub"><div><span>العائد الإجمالي السنوي</span><b id="h2">—</b></div><div><span>صافي الدخل التشغيلي</span><b id="h3">—</b></div></div></div>
+ <div class="hero" id="hero"><div class="k" id="h1k">مدة الاسترداد المخصومة (بمعدل الخصم)</div><div class="v" id="h1">—</div><div class="k" id="h1s" style="margin-top:4px"></div>
+  <div class="sub"><div><span>العائد الإجمالي السنوي</span><b id="h2">—</b></div><div><span>صافي الدخل التشغيلي</span><b id="h3">—</b></div></div>
+  <div class="sub" style="grid-template-columns:1fr 1fr 1fr"><div><span>الدخل الإجمالي السنة 1 (اسمي)</span><b id="h4">—</b></div><div><span>متوسط صافي الدخل السنوي بقيمة النهارده</span><b id="h5">—</b></div><div><span>متوسط صافي الدخل السنوي (اسمي)</span><b id="h6">—</b></div></div></div>
  <div class="card"><h2>الوحدة</h2>
   <label>اسم أو كود الوحدة <small>(اختياري)</small></label><input id="unitName" type="text" inputmode="text" dir="auto" style="direction:rtl" placeholder="مثال: SHR-012 شقة شيراتون">
   <label>المساحة (م²)</label><input id="area" inputmode="decimal" placeholder="مثال: 120">
@@ -154,5 +155,5 @@ input[readonly]{opacity:.75}
 </section>
 <section id="s"><div class="card"><h2>التحليلات المحفوظة على هذا الجهاز</h2><div id="list"></div><div class="actions" style="margin-top:12px"><button id="compare" class="p">قارن المحدد</button></div><div id="cmp" style="margin-top:12px"></div></div></section>
 </main>
-<script src="calc.js?v=7"></script><script src="app.js?v=7"></script>
+<script src="calc.js?v=8"></script><script src="app.js?v=8"></script>
 </body></html>
