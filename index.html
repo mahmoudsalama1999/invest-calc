@@ -98,8 +98,9 @@ input[readonly]{opacity:.75}
   <div><label>مدة الاحتفاظ (سنوات)</label><input id="holdYears" inputmode="decimal" placeholder="مثال: 10"></div></div>
   <label>الخصم على الإيجار <small>(لحساب مدة الاسترداد المخصومة)</small></label><select id="discountMode"><option value="monthly">شهريا (كل شهر يتخصم بتاريخه)</option><option value="annual">سنويا (آخر كل سنة)</option></select>
   <label>قيمة إعادة البيع المتوقعة <small>(اختياري، تُحسب في نهاية المدة)</small></label><input id="ResalePrice" inputmode="decimal" placeholder="أو اتركها فاضية واكتب نمو السعر تحت">
-  <div class="row"><div><label>نمو سعر العقار السنوي % <small>(لو مفيش سعر بيع)</small></label><input id="appreciationPct" inputmode="decimal" placeholder="مثال: 8"></div>
+  <div class="row"><div><label>نمو سعر العقار السنوي % <small>(لو مفيش سعر بيع)</small></label><input id="appreciationPct" inputmode="decimal" value="10" placeholder="مثال: 10"></div>
   <div><label>مصاريف البيع % <small>(سمسرة، ضرائب)</small></label><input id="sellingCostPct" inputmode="decimal" placeholder="مثال: 2.5"></div></div>
+  <p class="note">نمو السعر المقترح 10% سنويا بالجنيه: تقدير تقريبي من مؤشرات السوق المصري (آخر 10 سنين اسميا حوالي 7.8% سنويا، وآخر 5 سنين حوالي 14%). عدّله حسب تقديرك، وهو ليس ضمانا.</p>
   <p class="note">التدفقات سنوية في نهاية كل سنة، مخصومة بمعدل الخصم، وتشمل صافي الدخل التشغيلي وقيمة البيع بعد المصاريف. الحساب قبل التمويل (على إجمالي الاستثمار).</p>
  </div>
  <div class="card"><h2>التمويل</h2>
@@ -134,5 +135,5 @@ input[readonly]{opacity:.75}
 </section>
 <section id="s"><div class="card"><h2>التحليلات المحفوظة على هذا الجهاز</h2><div id="list"></div></div></section>
 </main>
-<script src="calc.js?v=4"></script><script src="app.js?v=4"></script>
+<script src="calc.js?v=5"></script><script src="app.js?v=5"></script>
 </body></html>
