@@ -92,6 +92,14 @@ input[readonly]{opacity:.75}
   <div class="row"><div><label>تكاليف الاستحواذ</label><input id="AcquisitionCosts" inputmode="decimal" value="0" placeholder="تسجيل، عمولة"></div>
   <div><label>التجهيزات الأولية</label><input id="InitialImprovements" inputmode="decimal" value="0" placeholder="تشطيب، أثاث"></div></div>
  </div>
+ <div class="card"><h2>معدل الخصم وإعادة البيع (صافي القيمة الحالية)</h2>
+  <div class="row"><div><label>معدل الخصم السنوي %</label><input id="discountRate" inputmode="decimal" placeholder="مثال: 15"></div>
+  <div><label>مدة الاحتفاظ (سنوات)</label><input id="holdYears" inputmode="decimal" placeholder="مثال: 10"></div></div>
+  <label>قيمة إعادة البيع المتوقعة <small>(اختياري، تُحسب في نهاية المدة)</small></label><input id="ResalePrice" inputmode="decimal" placeholder="أو اتركها فاضية واكتب نمو السعر تحت">
+  <div class="row"><div><label>نمو سعر العقار السنوي % <small>(لو مفيش سعر بيع)</small></label><input id="appreciationPct" inputmode="decimal" placeholder="مثال: 8"></div>
+  <div><label>مصاريف البيع % <small>(سمسرة، ضرائب)</small></label><input id="sellingCostPct" inputmode="decimal" placeholder="مثال: 2.5"></div></div>
+  <p class="note">التدفقات سنوية في نهاية كل سنة، مخصومة بمعدل الخصم، وتشمل صافي الدخل التشغيلي وقيمة البيع بعد المصاريف. الحساب قبل التمويل (على إجمالي الاستثمار).</p>
+ </div>
  <div class="card"><h2>التمويل</h2>
   <label>حالة التمويل</label><select id="financing"><option value="">غير محدد</option><option value="none">بدون تمويل</option><option value="financed">بتمويل</option></select>
   <div id="finBox" style="display:none">
@@ -124,5 +132,5 @@ input[readonly]{opacity:.75}
 </section>
 <section id="s"><div class="card"><h2>التحليلات المحفوظة على هذا الجهاز</h2><div id="list"></div></div></section>
 </main>
-<script src="calc.js"></script><script src="app.js"></script>
+<script src="calc.js?v=3"></script><script src="app.js?v=3"></script>
 </body></html>
