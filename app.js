@@ -1,7 +1,7 @@
 const $=id=>document.getElementById(id),C=InvCalc;
-const NAMES={GrossAnnualIncome:'الدخل الإجمالي السنوي',GrossMonthlyYield:'العائد الإجمالي الشهري',GrossAnnualYield:'العائد الإجمالي السنوي',EffectiveAnnualIncome:'الدخل الفعلي السنوي (بعد الشغور)',NetOperatingIncome:'صافي الدخل التشغيلي',TotalInvestment:'إجمالي الاستثمار',OperatingYieldOnPrice:'العائد التشغيلي على السعر',NetYieldOnTotalInvestment:'صافي العائد على إجمالي الاستثمار',GrossPaybackYears:'مدة الاسترداد الإجمالي',GrossPaybackYearsOnPrice:'مدة الاسترداد على السعر فقط',OperatingPaybackYears:'مدة الاسترداد التشغيلي',AnnualCashFlow:'التدفق النقدي السنوي',AverageMonthlyCashFlow:'متوسط التدفق النقدي الشهري',CashOnCashReturn:'العائد النقدي على النقد المستثمر'};
-const KIND={GrossMonthlyYield:'pct',GrossAnnualYield:'pct',OperatingYieldOnPrice:'pct',NetYieldOnTotalInvestment:'pct',CashOnCashReturn:'pct',GrossPaybackYears:'yr',GrossPaybackYearsOnPrice:'yr',OperatingPaybackYears:'yr'};
-const MONEY=['PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested'];
+const NAMES={GrossAnnualIncome:'الدخل الإجمالي السنوي',GrossMonthlyYield:'العائد الإجمالي الشهري',GrossAnnualYield:'العائد الإجمالي السنوي',EffectiveAnnualIncome:'الدخل الفعلي السنوي (بعد الشغور)',NetOperatingIncome:'صافي الدخل التشغيلي',TotalInvestment:'إجمالي الاستثمار',OperatingYieldOnPrice:'العائد التشغيلي على السعر',NetYieldOnTotalInvestment:'صافي العائد على إجمالي الاستثمار',GrossPaybackYears:'مدة الاسترداد الإجمالي',GrossPaybackYearsOnPrice:'مدة الاسترداد على السعر فقط',OperatingPaybackYears:'مدة الاسترداد التشغيلي',AnnualCashFlow:'التدفق النقدي السنوي',AverageMonthlyCashFlow:'متوسط التدفق النقدي الشهري',CashOnCashReturn:'العائد النقدي على النقد المستثمر',NPV:'صافي القيمة الحالية (NPV)',PVIncome:'القيمة الحالية للدخل التشغيلي',PVResale:'القيمة الحالية لصافي إعادة البيع',IRR:'معدل العائد الداخلي (IRR)'};
+const KIND={GrossMonthlyYield:'pct',GrossAnnualYield:'pct',OperatingYieldOnPrice:'pct',NetYieldOnTotalInvestment:'pct',CashOnCashReturn:'pct',IRR:'pct',GrossPaybackYears:'yr',GrossPaybackYearsOnPrice:'yr',OperatingPaybackYears:'yr'};
+const MONEY=['ResalePrice','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested'];
 C.CURRENCIES.forEach(c=>{for(const id of['currency','pcur']){const o=document.createElement('option');o.value=o.textContent=c;$(id).appendChild(o)}});
 const AR='٠١٢٣٤٥٦٧٨٩',PR='۰۱۲۳۴۵۶۷۸۹';
 function parse(id){let s=$(id).value.trim();if(!s)return null;
@@ -12,10 +12,10 @@ function show(k,m,cur,full){if(!m.ok)return null;const v=m.value,t=KIND[k];
  if(t==='pct')return fmt(v,2)+'%';if(t==='yr'){const y=Math.floor(v),mo=Math.round((v-y)*12);return fmt(v,2)+' سنة'+(mo&&full?` (${y} سنة و${mo} شهر)`:'')}
  return fmt(v)+' '+cur}
 function read(){const i={currency:$('currency').value,financing:$('financing').value,annualRentIncreasePercent:parse('inc')};
- for(const k of MONEY)i[k]=parse(k);i.area=parse('area');const v=parse('VacancyRate');i.VacancyRate=v==null?null:v/100;
+ for(const k of MONEY)i[k]=parse(k);i.area=parse('area');i.discountRate=parse('discountRate');i.holdYears=parse('holdYears');i.appreciationPct=parse('appreciationPct');i.sellingCostPct=parse('sellingCostPct');const v=parse('VacancyRate');i.VacancyRate=v==null?null:v/100;
  if(i.VacancyRate!=null&&!Number.isNaN(i.VacancyRate))i.VacancyRate=Math.round(i.VacancyRate*1e6)/1e6;return i}
 // live thousand separators
-const SEP=['loanAmt','area','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent'];
+const SEP=['loanAmt','area','PurchasePrice','MonthlyRent','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements','AnnualDebtService','InitialCashInvested','prent','ResalePrice'];
 function group(s){s=s.replace(/[٠-٩]/g,d=>AR.indexOf(d)).replace(/[۰-۹]/g,d=>PR.indexOf(d)).replace(/[٫]/g,'.').replace(/[^0-9.]/g,'');
  const i=s.indexOf('.');let ip=i<0?s:s.slice(0,i),dp=i<0?null:s.slice(i+1).replace(/\./g,'');
  ip=ip.replace(/^0+(?=\d)/,'').replace(/\B(?=(\d{3})+(?!\d))/g,',');return dp===null?ip:ip+'.'+dp}
@@ -49,7 +49,7 @@ function cashHint(i,M){const h=$('cashHint'),l=parse('loanAmt');h.textContent=''
 let last=null;
 function render(){const i=read();$('finBox').style.display=i.financing==='financed'?'block':'none';
  if(i.financing!=='financed'){}
- applyLoan(i);const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate'].filter(k=>Number.isNaN(i[k]));
+ applyLoan(i);const bad=[...MONEY,'area','annualRentIncreasePercent','VacancyRate','discountRate','holdYears','appreciationPct','sellingCostPct'].filter(k=>Number.isNaN(i[k]));
  const box=$('aerr');box.innerHTML='';
  if(bad.length){box.innerHTML='<div class="err">أرقام غير صالحة في بعض الحقول. أدخل أرقاما فقط.</div>';return}
  if(i.loanError){box.innerHTML='<div class="err">'+i.loanError+'</div>';return}
@@ -84,7 +84,7 @@ $('share').onclick=()=>{render();if(!last||last.r.errors.length)return;const t=s
 $('reset').onclick=()=>{document.querySelectorAll('#a input').forEach(e=>e.value=['VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses','AcquisitionCosts','InitialImprovements'].includes(e.id)?'0':'');$('financing').value='';render()};
 function list(){const a=load();$('list').innerHTML=a.length?a.map((x,k)=>`<div class="saved"><a href="#" data-o="${k}">${x.n.replace(/</g,'&lt;')}</a><span>${new Date(x.t).toLocaleDateString('ar-EG')}</span><button data-d="${k}">حذف</button></div>`).join(''):'<p class="note">لا توجد تحليلات محفوظة بعد.</p>'}
 $('list').onclick=e=>{const o=e.target.dataset.o,d=e.target.dataset.d,a=load();e.preventDefault();
- if(o!=null){for(const[id,v]of Object.entries(a[o].f))$(id).value=v;fmtAll();document.querySelector('nav [data-t=a]').click();render()}
+ if(o!=null){['discountRate','holdYears','ResalePrice','appreciationPct','sellingCostPct'].forEach(id=>$(id).value='');for(const[id,v]of Object.entries(a[o].f))$(id).value=v;fmtAll();document.querySelector('nav [data-t=a]').click();render()}
  if(d!=null&&confirm('حذف هذا التحليل؟')){a.splice(d,1);localStorage.setItem(KEY,JSON.stringify(a));list()}};
 render();price();
 if('serviceWorker'in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('sw.js');
