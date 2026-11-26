@@ -62,6 +62,27 @@
     }
     return { npv: pvIncome + pvResale - o.outlay, pvIncome, pvResale, resaleNet: net, resaleGross: resale, irr };
   }
+  // Discounted payback: years until cumulative PV of income recovers `outlay`.
+  // annualFn(k) = income of year k (k>=1). mode 'monthly': 12 equal monthly receipts per year, each discounted
+  // at (1+R)^(m/12); mode 'annual': one receipt at each year end, discounted (1+R)^k, interpolated inside the year.
+  function discPayback(outlay, annualFn, ratePct, mode) {
+    if (!(outlay > 0)) return null;
+    const R = ratePct / 100; let acc = 0;
+    if (mode === 'annual') {
+      for (let k = 1; k <= 100; k++) {
+        const pv = annualFn(k) / Math.pow(1 + R, k);
+        if (acc + pv >= outlay) return k - 1 + (outlay - acc) / pv;
+        acc += pv;
+      }
+      return null;
+    }
+    for (let m = 1; m <= 1200; m++) {
+      const pv = annualFn(Math.ceil(m / 12)) / 12 / Math.pow(1 + R, m / 12);
+      if (acc + pv >= outlay) return (m - 1 + (outlay - acc) / pv) / 12;
+      acc += pv;
+    }
+    return null;
+  }
   const F = { // field keys -> Arabic labels
     PurchasePrice:'سعر الشراء', MonthlyRent:'الإيجار الشهري', OtherAnnualIncome:'دخل سنوي آخر', VacancyRate:'نسبة الشغور',
     AnnualOperatingExpenses:'المصروفات التشغيلية السنوية', AcquisitionCosts:'تكاليف الاستحواذ', InitialImprovements:'التجهيزات الأولية',
@@ -75,6 +96,7 @@
       const v = i[k];
       if (v == null) continue;
       if (v < 0) errors.push([k, F[k] + ': القيمة لا تقبل الأرقام السالبة.']);
+      else if (k === 'MonthlyRent' && i.rentAnnual != null) { if (Math.round(i.rentAnnual * 100) / 100 !== i.rentAnnual) errors.push([k, 'الإيجار السنوي: منزلتان عشريتان على الأكثر.']); }
       else if (k === 'VacancyRate') { if (v > 1) errors.push([k, 'الشغور من صفر إلى 100%.']); }
       else if (Math.round(v * 100) / 100 !== v) errors.push([k, F[k] + ': منزلتان عشريتان على الأكثر.']);
     }
@@ -89,7 +111,7 @@
     const p = i.PurchasePrice, r = i.MonthlyRent, o = i.OtherAnnualIncome, v = i.VacancyRate, e = i.AnnualOperatingExpenses,
       a = i.AcquisitionCosts, c = i.InitialImprovements, d = i.AnnualDebtService, q = i.InitialCashInvested;
     const inc = i.annualRentIncreasePercent || 0;
-    const gross = nn(r) ? r * 12 : null;
+    const gross = i.rentAnnual != null && nn(r) ? i.rentAnnual : nn(r) ? r * 12 : null;
     const effective = nn(gross, v, o) ? gross * (1 - v) + o : null;
     const noi = nn(effective, e) ? effective - e : null;
     const total = nn(p, a, c) ? p + a + c : null;
@@ -120,13 +142,21 @@
     const ndeps = ddeps.concat(['discountRate','holdYears']);
     const ready = nn(p, a, c, r, v, o, e) && nn(i.discountRate, i.holdYears) && i.holdYears > 0;
     let D = null;
-    if (ready) D = dcf({ years: i.holdYears, rate: i.discountRate, inc, rentAnnual: r * 12, vac: v, other: o, opex: e, price: p, outlay: p + a + c,
+    if (ready) D = dcf({ years: i.holdYears, rate: i.discountRate, inc, rentAnnual: gross, vac: v, other: o, opex: e, price: p, outlay: p + a + c,
       resalePrice: i.ResalePrice, appreciation: i.appreciationPct, sellCost: i.sellingCostPct });
     const dm = (k, val, why) => { const missing = ndeps.filter(n => i[n] == null).map(n => F[n] || ({discountRate:'معدل الخصم',holdYears:'مدة الاحتفاظ'})[n]);
       M[k] = { value: val, ok: val != null, why: val != null ? '' : missing.length ? 'ينقص: ' + missing.join('، ') : (why || 'مدة الاحتفاظ يجب أن تكون أكبر من صفر') }; };
     dm('NPV', D && D.npv); dm('PVIncome', D && D.pvIncome); dm('PVResale', D && D.pvResale); dm('IRR', D && D.irr, 'لا يوجد معدل عائد داخلي (التدفقات لا تغطي الاستثمار)');
+    const dmode = i.discountMode === 'annual' ? 'annual' : 'monthly';
+    const inc2 = 1 + inc / 100;
+    const dp = (k, val, deps, why) => { const miss = deps.filter(n => i[n] == null).map(n => F[n] || 'معدل الخصم');
+      M[k] = { value: val, ok: val != null, why: val != null ? '' : miss.length ? 'ينقص: ' + miss.join('، ') : why }; };
+    const okG = nn(p, a, c, r, i.discountRate), okN = okG && nn(v, o, e);
+    const whyNone = 'رأس المال لا يُسترد خلال 100 سنة بهذا المعدل';
+    dp('DiscPaybackGross', okG ? discPayback(total, k => gross * Math.pow(inc2, k - 1), i.discountRate, dmode) : null, ['PurchasePrice','AcquisitionCosts','InitialImprovements','MonthlyRent','discountRate'], whyNone);
+    dp('DiscPaybackNet', okN ? discPayback(total, k => gross * Math.pow(inc2, k - 1) * (1 - v) + o - e, i.discountRate, dmode) : null, ['PurchasePrice','AcquisitionCosts','InitialImprovements','MonthlyRent','VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses','discountRate'], whyNone);
     return { errors: [], metrics: M };
   }
-  const api = { dcf, calculate, purchasePrice, payback, rentUnits, CURRENCIES };
+  const api = { discPayback, dcf, calculate, purchasePrice, payback, rentUnits, CURRENCIES };
   if (typeof module !== 'undefined') module.exports = api; else root.InvCalc = api;
 })(typeof self !== 'undefined' ? self : this);
