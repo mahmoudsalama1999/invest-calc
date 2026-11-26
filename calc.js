@@ -69,7 +69,7 @@
     const pvIncome = flows.reduce((s, [t, cf]) => s + cf / Math.pow(1 + r, t), 0);
     const pvResale = net / Math.pow(1 + r, N);
     const irr = irrOf(x => pvAt(x) - o.outlay, -0.99, 10);
-    const out = { npv: pvIncome + pvResale - o.outlay, pvIncome, pvResale, resaleNet: net, resaleGross: resale, irr, lev };
+    const out = { nomIncome: flows.reduce((s, [, cf]) => s + cf, 0), npv: pvIncome + pvResale - o.outlay, pvIncome, pvResale, resaleNet: net, resaleGross: resale, irr, lev };
     const nextNoi = o.rentAnnual * Math.pow(step, N) * (1 - o.vac) + o.other - o.opex * Math.pow(eg, N);
     out.impliedCap = resale > 0 ? nextNoi / resale * 100 : null;
     const grossPot = o.rentAnnual + o.other;
@@ -177,6 +177,7 @@
     const dm = (k, val, why) => { const missing = ndeps.filter(n => i[n] == null).map(n => F[n] || ({discountRate:'معدل الخصم',holdYears:'مدة الاحتفاظ'})[n]);
       M[k] = { value: val, ok: val != null, why: val != null ? '' : missing.length ? 'ينقص: ' + missing.join('، ') : (why || 'مدة الاحتفاظ يجب أن تكون أكبر من صفر') }; };
     dm('ResaleValue', D && D.resaleGross); dm('NPV', D && D.npv); dm('PVIncome', D && D.pvIncome); dm('PVResale', D && D.pvResale); dm('IRR', D && D.irr, 'لا يوجد معدل عائد داخلي (التدفقات لا تغطي الاستثمار)');
+    dm('AvgIncomeNominal', D && D.nomIncome / i.holdYears); dm('AvgIncomePV', D && D.pvIncome / i.holdYears);
     const dmode = i.discountMode === 'annual' ? 'annual' : 'monthly';
     const inc2 = 1 + inc / 100;
     const dp = (k, val, deps, why) => { const miss = deps.filter(n => i[n] == null).map(n => F[n] || 'معدل الخصم');
