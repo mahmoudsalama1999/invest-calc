@@ -35,10 +35,37 @@
     if (!isFinite(p) || p === 0) throw new Error('السعر المحسوب خارج الحدود.');
     return p;
   }
+  // Discounted cash flow (unlevered, end-of-year flows).
+  // flows: year k income = rent*12*step^(k-1)*(1-vac)+other-opex; last partial year pro-rated.
+  // resale at year N = (explicit resale price, else price*(1+g)^N) * (1 - sellingCost%).
+  function dcf(o) {
+    const N = o.years, step = 1 + (o.inc || 0) / 100, flows = [];
+    const whole = Math.ceil(N);
+    for (let k = 1; k <= whole; k++) {
+      const w = Math.min(1, N - k + 1), t = Math.min(k, N);
+      const cf = (o.rentAnnual * Math.pow(step, k - 1) * (1 - o.vac) + o.other - o.opex) * w;
+      flows.push([t, cf]);
+    }
+    let resale = 0;
+    if (o.resalePrice != null) resale = o.resalePrice;
+    else if (o.appreciation != null) resale = o.price * Math.pow(1 + o.appreciation / 100, N);
+    const net = resale * (1 - (o.sellCost || 0) / 100);
+    const pvAt = r => flows.reduce((s, [t, cf]) => s + cf / Math.pow(1 + r, t), 0) + net / Math.pow(1 + r, N);
+    const r = o.rate / 100;
+    const pvIncome = flows.reduce((s, [t, cf]) => s + cf / Math.pow(1 + r, t), 0);
+    const pvResale = net / Math.pow(1 + r, N);
+    let irr = null, lo = -0.99, hi = 10;
+    const f = x => pvAt(x) - o.outlay;
+    if (f(lo) * f(hi) < 0) {
+      for (let n = 0; n < 200; n++) { const mid = (lo + hi) / 2; if (f(lo) * f(mid) <= 0) hi = mid; else lo = mid; }
+      irr = (lo + hi) / 2 * 100;
+    }
+    return { npv: pvIncome + pvResale - o.outlay, pvIncome, pvResale, resaleNet: net, resaleGross: resale, irr };
+  }
   const F = { // field keys -> Arabic labels
     PurchasePrice:'سعر الشراء', MonthlyRent:'الإيجار الشهري', OtherAnnualIncome:'دخل سنوي آخر', VacancyRate:'نسبة الشغور',
     AnnualOperatingExpenses:'المصروفات التشغيلية السنوية', AcquisitionCosts:'تكاليف الاستحواذ', InitialImprovements:'التجهيزات الأولية',
-    AnnualDebtService:'خدمة الدين السنوية', InitialCashInvested:'النقد الأولي المستثمر' };
+    AnnualDebtService:'خدمة الدين السنوية', InitialCashInvested:'النقد الأولي المستثمر', ResalePrice:'قيمة إعادة البيع', };
   // inputs: values in money / vacancy as fraction (0..1) / null = unknown
   function calculate(i) {
     const errors = [];
@@ -53,6 +80,11 @@
     }
     if (i.financing === 'none' && (i.AnnualDebtService > 0 || i.InitialCashInvested > 0))
       errors.push(['Financing','اختر تمويلًا عند إدخال خدمة دين أو نقد أولي، أو امسح هذه الحقول.']);
+    for (const [k, n] of [['discountRate','معدل الخصم'],['holdYears','مدة الاحتفاظ'],['appreciationPct','نمو سعر العقار'],['sellingCostPct','مصاريف البيع']]) {
+      if (i[k] != null && i[k] < 0) errors.push([k, n + ': القيمة لا تقبل الأرقام السالبة.']);
+    }
+    if (i.sellingCostPct != null && i.sellingCostPct > 100) errors.push(['sellingCostPct','مصاريف البيع من صفر إلى 100%.']);
+    if (i.holdYears != null && i.holdYears > 100) errors.push(['holdYears','مدة الاحتفاظ كبيرة جدا.']);
     if (errors.length) return { errors, metrics: null };
     const p = i.PurchasePrice, r = i.MonthlyRent, o = i.OtherAnnualIncome, v = i.VacancyRate, e = i.AnnualOperatingExpenses,
       a = i.AcquisitionCosts, c = i.InitialImprovements, d = i.AnnualDebtService, q = i.InitialCashInvested;
@@ -83,8 +115,18 @@
     add('AnnualCashFlow', cash, cdeps, 'حدد حالة التمويل');
     add('AverageMonthlyCashFlow', cash != null ? cash / 12 : null, cdeps, 'حدد حالة التمويل');
     add('CashOnCashReturn', i.financing === 'financed' ? pct(cash, q) : null, i.financing === 'financed' ? cdeps.concat(['InitialCashInvested']) : [], i.financing === 'financed' ? 'النقد المستثمر يجب أن يكون أكبر من صفر' : 'يتطلب تمويلًا');
+    // NPV / IRR
+    const ddeps = ['PurchasePrice','AcquisitionCosts','InitialImprovements','MonthlyRent','VacancyRate','OtherAnnualIncome','AnnualOperatingExpenses'];
+    const ndeps = ddeps.concat(['discountRate','holdYears']);
+    const ready = nn(p, a, c, r, v, o, e) && nn(i.discountRate, i.holdYears) && i.holdYears > 0;
+    let D = null;
+    if (ready) D = dcf({ years: i.holdYears, rate: i.discountRate, inc, rentAnnual: r * 12, vac: v, other: o, opex: e, price: p, outlay: p + a + c,
+      resalePrice: i.ResalePrice, appreciation: i.appreciationPct, sellCost: i.sellingCostPct });
+    const dm = (k, val, why) => { const missing = ndeps.filter(n => i[n] == null).map(n => F[n] || ({discountRate:'معدل الخصم',holdYears:'مدة الاحتفاظ'})[n]);
+      M[k] = { value: val, ok: val != null, why: val != null ? '' : missing.length ? 'ينقص: ' + missing.join('، ') : (why || 'مدة الاحتفاظ يجب أن تكون أكبر من صفر') }; };
+    dm('NPV', D && D.npv); dm('PVIncome', D && D.pvIncome); dm('PVResale', D && D.pvResale); dm('IRR', D && D.irr, 'لا يوجد معدل عائد داخلي (التدفقات لا تغطي الاستثمار)');
     return { errors: [], metrics: M };
   }
-  const api = { calculate, purchasePrice, payback, rentUnits, CURRENCIES };
+  const api = { dcf, calculate, purchasePrice, payback, rentUnits, CURRENCIES };
   if (typeof module !== 'undefined') module.exports = api; else root.InvCalc = api;
 })(typeof self !== 'undefined' ? self : this);
